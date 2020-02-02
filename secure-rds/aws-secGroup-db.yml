@@ -1,0 +1,56 @@
+Description: >
+    Rafael Bicudo / Udacity Exercice
+    This template deploys a Security Group with an RDB associated with it
+
+Parameters:
+
+    EnvironmentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+    VpcCIDR:
+        Description: Please enter the IP range (CIDR notation) for this VPC
+        Type: String
+        Default: 10.0.0.0/16
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+        CidrBlock: !Ref VpcCIDR
+        EnableDnsHostnames: true
+        Tags:
+          - Key: Name
+            Value: !Ref EnvironmentName
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId:
+          !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
+  MyDB:
+    Type: "AWS::RDS::DBInstance"
+    DeletionPolicy: Snapshot
+    Properties:
+      AllocatedStorage: "10"
+      DBInstanceClass: db.t2.small
+      DBName: SecRDS
+      Engine: MySQL
+      EngineVersion: "5.7.22"
+      MasterUserPassword: SecRDSPassword
+      MasterUsername: SecRDS
+      Tags:
+        -
+          Key: SecRDS
+          Value: "My Secure RDS Database"

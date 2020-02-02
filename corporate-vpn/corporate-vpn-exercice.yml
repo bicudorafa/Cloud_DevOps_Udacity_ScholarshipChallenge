@@ -1,0 +1,118 @@
+Description: >
+    Rafael Bicudo / Udacity Exercice
+    This template deploys a VPC, with a pair private subnets spread
+    across two Availabilty Zones. It deploys a router to be plugged into a
+    VPN connection in a Corporate Database
+
+Parameters:
+
+    EnvironmentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+
+    VpcCIDR:
+        Description: Please enter the IP range (CIDR notation) for this VPC
+        Type: String
+        Default: 10.0.0.0/16
+
+    PrivateSubnet1CIDR:
+        Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+        Type: String
+        Default: 10.0.0.0/24
+
+    PrivateSubnet2CIDR:
+        Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+        Type: String
+        Default: 10.0.1.0/24
+
+Resources:
+
+    VPC:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: !Ref VpcCIDR
+            EnableDnsHostnames: true
+            Tags:
+                - Key: Name
+                  Value: !Ref EnvironmentName
+
+    PrivateSubnet1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref VPC
+            AvailabilityZone: !Select [ 0, !GetAZs '' ]
+            CidrBlock: !Ref PrivateSubnet1CIDR
+            MapPublicIpOnLaunch: false
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+
+    PrivateSubnet2:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref VPC
+            AvailabilityZone: !Select [ 1, !GetAZs '' ]
+            CidrBlock: !Ref PrivateSubnet2CIDR
+            MapPublicIpOnLaunch: false
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+
+    PrivateRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref VPC
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Private Routes
+
+    CustomerGateway:
+        Type: AWS::EC2::CustomerGateway
+        Properties:
+            Type: ipsec.1
+            BgpAsn: 65534
+            IpAddress: 12.1.2.3
+
+    VPNGateway:
+        Type: AWS::EC2::VPNGateway
+        Properties:
+            Type: ipsec.1
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} VPNGateway
+
+    VPNConnection:
+        Type: AWS::EC2::VPNConnection
+        Properties:
+            Type: ipsec.1
+            StaticRoutesOnly: true
+            CustomerGatewayId:
+             !Ref CustomerGateway
+            VpnGatewayId:
+             !Ref VPNGateway
+
+Outputs:
+
+    VPC:
+        Description: A reference to the created VPC
+        Value: !Ref VPC
+        Export:
+          Name: !Sub ${EnvironmentName}-VPCID
+
+    PrivateSubnets:
+        Description: A list of the private subnets
+        Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
+        Export:
+          Name: !Sub ${EnvironmentName}-PRIV-NETS
+
+    PrivateSubnet1:
+        Description: A reference to the private subnet in the 1st Availability Zone
+        Value: !Ref PrivateSubnet1
+        Export:
+          Name: !Sub ${EnvironmentName}-PRI1-SN
+
+    PrivateSubnet2:
+        Description: A reference to the private subnet in the 2nd Availability Zone
+        Value: !Ref PrivateSubnet2
+        Export:
+          Name: !Sub ${EnvironmentName}-PRI2-SN

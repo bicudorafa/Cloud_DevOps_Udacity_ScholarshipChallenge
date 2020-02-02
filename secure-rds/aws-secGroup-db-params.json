@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey":"EnvironmentName",
+    "ParameterValue":"VPC-RDS-SecGroup-Exercice"
+  },
+  {
+    "ParameterKey":"VpcCIDR",
+    "ParameterValue":"10.0.0.0/16"
+  }
+]

@@ -1,0 +1,9 @@
+Description: >
+  Rafael Bicudo / udacity-student
+  This Template Deploys a Test VPC
+Resources:
+  TestVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.31.0.0/16
+      EnableDnsHostnames: true
